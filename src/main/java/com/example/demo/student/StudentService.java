@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -43,18 +44,30 @@ public class StudentService {
     }
 
     @Transactional
-    public void updateStudent(Long studentId, Student student){
+    public void updateStudent(Long studentId,
+                              String name,
+                              String email){
 
-        Optional<Student> studentOptional = studentRepository
-                .findStudentById(studentId);
-        if(studentOptional.isPresent()){
-            Student student1 = studentOptional.get();
-            student1.setName(student.getName());
-            student1.setEmail(student.getEmail());
-            student1.setDob(student.getDob());
-            studentRepository.save(student1);
-        }else{
-            throw new IllegalStateException("No such ID");
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "student with id" + studentId + " does not exist"));
+
+        if(name != null &&
+                name.length() > 0 &&
+                !Objects.equals(student.getName(), name)){
+            student.setName(name);
         }
+
+        if(email != null &&
+                email.length() > 0 &&
+                !Objects.equals(student.getName(), email)){
+            Optional<Student> studentOptional = studentRepository
+                    .findStudentByEmail(student.getEmail());
+            if(studentOptional.isPresent()){
+                throw new IllegalStateException("email taken");
+            }
+            student.setEmail(email);
+        }
+
     }
 }
